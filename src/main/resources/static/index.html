@@ -81,6 +81,25 @@
         <section class="card result-card" id="result-card" hidden>
             <h2>Your Suggested Career Path</h2>
             <div id="result-content"></div>
+            <div id="result-actions" class="result-actions"></div>
+            <div id="domain-detail-block" class="domain-detail-block" hidden></div>
+        </section>
+
+        <section class="card compare-card" id="compare-card" hidden>
+            <h2>Compare two domains</h2>
+            <p class="hint">Select two domains to compare required skills, work style, industry exposure, and growth opportunities.</p>
+            <div class="compare-controls">
+                <div class="form-row">
+                    <label for="compare-domain1">First domain</label>
+                    <select id="compare-domain1" class="dashboard-select"></select>
+                </div>
+                <div class="form-row">
+                    <label for="compare-domain2">Second domain</label>
+                    <select id="compare-domain2" class="dashboard-select"></select>
+                </div>
+                <button type="button" class="primary-btn" id="compare-btn">Compare</button>
+            </div>
+            <div id="compare-result" class="compare-result" hidden></div>
         </section>
     </main>
 
@@ -89,7 +108,7 @@
     </footer>
 </div>
 
-<script src="app.js"></script>
+<script src="app.js?v=2"></script>
 </body>
 </html>
 

@@ -98,11 +98,26 @@ async function submitForm(event) {
     }
 }
 
+let lastRecommendation = { primaryDomain: null, otherSuitableDomains: [] };
+
 function renderResult(data) {
     const card = document.getElementById("result-card");
     const container = document.getElementById("result-content");
+    const actionsEl = document.getElementById("result-actions");
+    const detailBlock = document.getElementById("domain-detail-block");
+    const compareCard = document.getElementById("compare-card");
 
     container.innerHTML = "";
+    actionsEl.innerHTML = "";
+    detailBlock.innerHTML = "";
+    detailBlock.hidden = true;
+    document.getElementById("compare-result").innerHTML = "";
+    document.getElementById("compare-result").hidden = true;
+
+    lastRecommendation = {
+        primaryDomain: data.primaryDomain,
+        otherSuitableDomains: data.otherSuitableDomains || []
+    };
 
     const primary = document.createElement("div");
     primary.className = "result-domain";
@@ -171,7 +186,159 @@ function renderResult(data) {
         container.appendChild(list);
     }
 
+    if (data.primaryDomain && data.primaryDomain !== "Exploration Needed") {
+        const viewDetailsBtn = document.createElement("button");
+        viewDetailsBtn.type = "button";
+        viewDetailsBtn.className = "primary-btn";
+        viewDetailsBtn.textContent = "View domain details (skills, roadmap, certifications)";
+        viewDetailsBtn.addEventListener("click", loadAndShowDomainDetails);
+        actionsEl.appendChild(viewDetailsBtn);
+    }
+
+    const allDomains = [data.primaryDomain].concat(data.otherSuitableDomains || []).filter(d => d && d !== "Exploration Needed");
+    if (allDomains.length >= 2) {
+        compareCard.hidden = false;
+        const sel1 = document.getElementById("compare-domain1");
+        const sel2 = document.getElementById("compare-domain2");
+        sel1.innerHTML = "<option value=\"\">Select domain</option>" + allDomains.map(d => "<option value=\"" + escapeHtml(d) + "\">" + escapeHtml(d) + "</option>").join("");
+        sel2.innerHTML = "<option value=\"\">Select domain</option>" + allDomains.map(d => "<option value=\"" + escapeHtml(d) + "\">" + escapeHtml(d) + "</option>").join("");
+    } else {
+        compareCard.hidden = true;
+    }
+
     card.hidden = false;
+}
+
+function escapeHtml(s) {
+    const div = document.createElement("div");
+    div.textContent = s;
+    return div.innerHTML;
+}
+
+async function loadAndShowDomainDetails() {
+    const domainName = lastRecommendation.primaryDomain;
+    if (!domainName || domainName === "Exploration Needed") return;
+
+    const block = document.getElementById("domain-detail-block");
+    block.innerHTML = "<p class=\"result-text\">Loading...</p>";
+    block.hidden = false;
+
+    try {
+        const res = await fetch("/api/domains/details?name=" + encodeURIComponent(domainName));
+        if (!res.ok) {
+            block.innerHTML = "<p class=\"error-message\">Could not load domain details.</p>";
+            return;
+        }
+        const data = await res.json();
+        renderDomainDetails(data, block);
+    } catch (e) {
+        block.innerHTML = "<p class=\"error-message\">Unable to load details. Check if the server is running.</p>";
+    }
+}
+
+function renderDomainDetails(data, block) {
+    block.innerHTML = "";
+
+    if (data.description) {
+        const desc = document.createElement("p");
+        desc.className = "result-text";
+        desc.textContent = data.description;
+        block.appendChild(desc);
+    }
+
+    if (data.coreSkills && data.coreSkills.length > 0) {
+        const title = document.createElement("div");
+        title.className = "result-section-title";
+        title.textContent = "Required core skills";
+        block.appendChild(title);
+        const ul = document.createElement("ul");
+        ul.className = "step-list";
+        data.coreSkills.forEach(s => {
+            const li = document.createElement("li");
+            li.textContent = s;
+            ul.appendChild(li);
+        });
+        block.appendChild(ul);
+    }
+
+    if (data.roadmap && data.roadmap.length > 0) {
+        const title = document.createElement("div");
+        title.className = "result-section-title";
+        title.textContent = "Beginner learning roadmap";
+        block.appendChild(title);
+        const section = document.createElement("div");
+        section.className = "detail-section";
+        data.roadmap.sort((a, b) => (a.stepOrder || 0) - (b.stepOrder || 0));
+        data.roadmap.forEach(step => {
+            const div = document.createElement("div");
+            div.className = "roadmap-step";
+            div.innerHTML = "<strong>Step " + (step.stepOrder) + ": " + escapeHtml(step.title || "") + "</strong><p>" + escapeHtml(step.description || "") + "</p>";
+            section.appendChild(div);
+        });
+        block.appendChild(section);
+    }
+
+    if (data.certifications && data.certifications.length > 0) {
+        const title = document.createElement("div");
+        title.className = "result-section-title";
+        title.textContent = "Suggested certifications / learning areas";
+        block.appendChild(title);
+        data.certifications.forEach(c => {
+            const div = document.createElement("div");
+            div.className = "cert-item";
+            div.innerHTML = "<strong>" + escapeHtml(c.name || "") + "</strong>" + (c.level ? " <span class=\"level\">(" + escapeHtml(c.level) + ")</span>" : "") + "<br>" + escapeHtml(c.description || "");
+            block.appendChild(div);
+        });
+    }
+}
+
+document.getElementById("compare-btn").addEventListener("click", async function () {
+    const d1 = document.getElementById("compare-domain1").value;
+    const d2 = document.getElementById("compare-domain2").value;
+    const resultEl = document.getElementById("compare-result");
+
+    if (!d1 || !d2) {
+        resultEl.innerHTML = "<p class=\"error-message\">Please select both domains.</p>";
+        resultEl.hidden = false;
+        return;
+    }
+    if (d1 === d2) {
+        resultEl.innerHTML = "<p class=\"error-message\">Please select two different domains.</p>";
+        resultEl.hidden = false;
+        return;
+    }
+
+    resultEl.innerHTML = "<p class=\"result-text\">Loading comparison...</p>";
+    resultEl.hidden = false;
+
+    try {
+        const res = await fetch("/api/domains/compare?domain1=" + encodeURIComponent(d1) + "&domain2=" + encodeURIComponent(d2));
+        if (!res.ok) {
+            resultEl.innerHTML = "<p class=\"error-message\">Could not load comparison.</p>";
+            return;
+        }
+        const data = await res.json();
+        renderComparison(data, resultEl);
+    } catch (e) {
+        resultEl.innerHTML = "<p class=\"error-message\">Unable to load comparison.</p>";
+    }
+});
+
+function renderComparison(data, resultEl) {
+    const d1 = data.domain1 || {};
+    const d2 = data.domain2 || {};
+    const skills1 = (d1.requiredSkills || []).length ? "<ul><li>" + (d1.requiredSkills || []).map(s => escapeHtml(s)).join("</li><li>") + "</li></ul>" : "—";
+    const skills2 = (d2.requiredSkills || []).length ? "<ul><li>" + (d2.requiredSkills || []).map(s => escapeHtml(s)).join("</li><li>") + "</li></ul>" : "—";
+
+    resultEl.innerHTML =
+        "<table class=\"compare-table\">" +
+        "<thead><tr><th>Criteria</th><th>" + escapeHtml(data.domain1Name || "") + "</th><th>" + escapeHtml(data.domain2Name || "") + "</th></tr></thead>" +
+        "<tbody>" +
+        "<tr><th>Required skills</th><td>" + skills1 + "</td><td>" + skills2 + "</td></tr>" +
+        "<tr><th>Work style</th><td>" + escapeHtml(d1.workStyle || "—") + "</td><td>" + escapeHtml(d2.workStyle || "—") + "</td></tr>" +
+        "<tr><th>Industry exposure</th><td>" + escapeHtml(d1.industryExposure || "—") + "</td><td>" + escapeHtml(d2.industryExposure || "—") + "</td></tr>" +
+        "<tr><th>Growth opportunities</th><td>" + escapeHtml(d1.growthOpportunities || "—") + "</td><td>" + escapeHtml(d2.growthOpportunities || "—") + "</td></tr>" +
+        "</tbody></table>";
 }
 
 function resetForm() {
@@ -183,6 +350,16 @@ function resetForm() {
     const container = document.getElementById("result-content");
     container.innerHTML = "";
     card.hidden = true;
+
+    document.getElementById("result-actions").innerHTML = "";
+    document.getElementById("domain-detail-block").innerHTML = "";
+    document.getElementById("domain-detail-block").hidden = true;
+
+    document.getElementById("compare-card").hidden = true;
+    document.getElementById("compare-result").innerHTML = "";
+    document.getElementById("compare-result").hidden = true;
+
+    lastRecommendation = { primaryDomain: null, otherSuitableDomains: [] };
 
     const errorElement = document.getElementById("error-message");
     errorElement.hidden = true;
