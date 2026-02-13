@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up - Career Path Planner</title>
+    <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+<div class="auth-wrapper">
+    <div class="card">
+        <div class="card-header">
+            <h1>Create your account</h1>
+            <p>Sign up to access your personalised career dashboard.</p>
+        </div>
+
+        <form id="signup-form">
+            <div class="form-group">
+                <label for="fullName">Full Name</label>
+                <input type="text" id="fullName" placeholder="Enter your name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="signupEmail">Email</label>
+                <input type="email" id="signupEmail" placeholder="you@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="signupPassword">Password</label>
+                <input type="password" id="signupPassword" placeholder="Create a password" required>
+            </div>
+
+            <div class="form-group">
+                <label for="interestedArea">Primary interested area</label>
+                <input type="text" id="interestedArea" placeholder="e.g. IT, Core Engineering, Design" required>
+            </div>
+
+            <button type="submit" class="primary-btn">Sign Up</button>
+
+            <p id="signup-error" class="error-message" hidden></p>
+
+            <p class="bottom-text">
+                Already have an account?
+                <a class="inline-link" href="login.html">Log in</a>
+            </p>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('signup-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const fullName = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('signupEmail').value.trim();
+        const password = document.getElementById('signupPassword').value.trim();
+        const interestedArea = document.getElementById('interestedArea').value.trim();
+        const errorEl = document.getElementById('signup-error');
+        const btn = this.querySelector('button[type="submit"]');
+
+        if (!fullName || !email || !password || !interestedArea) {
+            errorEl.hidden = false;
+            errorEl.textContent = 'Please fill in all fields.';
+            return;
+        }
+
+        errorEl.hidden = true;
+        errorEl.textContent = '';
+        btn.disabled = true;
+        btn.textContent = 'Signing up...';
+
+        try {
+            const res = await fetch('/api/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fullName: fullName,
+                    email: email,
+                    password: password,
+                    interestedArea: interestedArea
+                })
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (res.ok) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            errorEl.hidden = false;
+            errorEl.textContent = data.message || 'Sign up failed. Please try again.';
+        } catch (err) {
+            errorEl.hidden = false;
+            errorEl.textContent = 'Unable to reach the server. Make sure the app is running.';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Sign Up';
+        }
+    });
+</script>
+</body>
+</html>
+

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Career Path Planner</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page-wrapper">
+    <header class="header">
+        <h1>Career Path Planner</h1>
+        <p class="subtitle">
+            Answer a few simple questions about your interests.  
+            No marks, no judgement – only guidance.
+        </p>
+    </header>
+
+    <main class="content">
+        <section class="card">
+            <h2>Student Details</h2>
+            <form id="assessment-form">
+                <div class="form-row">
+                    <label for="name">Name (optional)</label>
+                    <input type="text" id="name" name="name" placeholder="Enter your name">
+                </div>
+
+                <div class="form-row">
+                    <label for="email">Email (optional)</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email">
+                </div>
+
+                <hr class="divider">
+
+                <h2>Your Interests & Comfort Areas</h2>
+                <p class="hint">Rate each statement from 1 (Strongly Disagree) to 5 (Strongly Agree).</p>
+
+                <div class="question">
+                    <label>I enjoy working with computers, apps, or coding related activities.</label>
+                    <div class="scale" data-field="interestTechnology"></div>
+                </div>
+
+                <div class="question">
+                    <label>I like machines, engines, circuits, construction or core engineering topics.</label>
+                    <div class="scale" data-field="interestCoreEngineering"></div>
+                </div>
+
+                <div class="question">
+                    <label>I prefer a stable, secure government-type job with clear rules and benefits.</label>
+                    <div class="scale" data-field="interestGovernmentStability"></div>
+                </div>
+
+                <div class="question">
+                    <label>I am interested in business, money management, sales or entrepreneurship.</label>
+                    <div class="scale" data-field="interestBusinessCommerce"></div>
+                </div>
+
+                <div class="question">
+                    <label>I like creative work such as design, writing, media, art or content creation.</label>
+                    <div class="scale" data-field="interestCreativeArts"></div>
+                </div>
+
+                <div class="question">
+                    <label>I am comfortable with practical, hands-on work like repairing, installation or field work.</label>
+                    <div class="scale" data-field="interestHandsOnTrades"></div>
+                </div>
+
+                <div class="question">
+                    <label>I feel happy when I help people, teach others or contribute to social causes.</label>
+                    <div class="scale" data-field="interestSocialImpact"></div>
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="primary-btn">Find My Career Domain</button>
+                    <button type="reset" class="ghost-btn">Clear</button>
+                </div>
+
+                <p id="error-message" class="error-message" hidden></p>
+            </form>
+        </section>
+
+        <section class="card result-card" id="result-card" hidden>
+            <h2>Your Suggested Career Path</h2>
+            <div id="result-content"></div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>Designed as a simple rule-based mini project for students.</p>
+    </footer>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
+

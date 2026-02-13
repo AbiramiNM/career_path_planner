@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Career Path Planner</title>
+    <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+<div class="auth-wrapper">
+    <div class="card">
+        <div class="card-header">
+            <h1>Welcome back</h1>
+            <p>Log in to continue to your career dashboard.</p>
+        </div>
+
+        <form id="login-form">
+            <div class="form-group">
+                <label for="loginEmail">Email</label>
+                <input type="email" id="loginEmail" placeholder="you@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter your password" required>
+            </div>
+
+            <button type="submit" class="primary-btn">Log In</button>
+
+            <p id="login-error" class="error-message" hidden></p>
+
+            <p class="bottom-text">
+                New here?
+                <a class="inline-link" href="signup.html">Create an account</a>
+            </p>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('login-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const errorEl = document.getElementById('login-error');
+        const btn = this.querySelector('button[type="submit"]');
+
+        errorEl.hidden = true;
+        errorEl.textContent = '';
+        btn.disabled = true;
+        btn.textContent = 'Logging in...';
+
+        try {
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, password: password })
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (res.ok) {
+                // Store user info for dashboard (no password)
+                const user = {
+                    id: data.id,
+                    name: data.fullName,
+                    email: data.email,
+                    interestedArea: data.interestedArea
+                };
+                localStorage.setItem('cpp_user', JSON.stringify(user));
+                localStorage.setItem('cpp_logged_in', 'true');
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            errorEl.hidden = false;
+            errorEl.textContent = data.message || 'Incorrect email or password.';
+        } catch (err) {
+            errorEl.hidden = false;
+            errorEl.textContent = 'Unable to reach the server. Make sure the app is running.';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Log In';
+        }
+    });
+</script>
+</body>
+</html>
+
