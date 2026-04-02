@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Career Path Planner</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .user-chip {
+            font-size: 0.85rem;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background-color: #eff6ff;
+            color: #1d4ed8;
+        }
+        .top-bar-btn {
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid #cbd5e1;
+            background-color: #fff;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .top-bar-btn:hover {
+            background-color: #f3f4f6;
+        }
+        .dashboard-select {
+            width: 100%;
+            padding: 8px 10px;
+            margin-top: 6px;
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.9rem;
+        }
+        .dashboard-note {
+            font-size: 0.83rem;
+            color: #6b7280;
+            margin-top: 6px;
+        }
+    </style>
+</head>
+<body>
+<div class="page-wrapper">
+    <header class="header">
+        <div class="dashboard-header">
+            <div>
+                <h1>Career Dashboard</h1>
+                <p class="subtitle">Choose a domain you are interested in exploring today.</p>
+            </div>
+            <div>
+                <span id="user-chip" class="user-chip"></span>
+                <button class="top-bar-btn" onclick="logout()">Log out</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="content">
+        <section class="card">
+            <h2>Your interested areas</h2>
+            <p class="hint">Select a category to quickly jump to that part of the planner.</p>
+
+            <select id="category-select" class="dashboard-select">
+                <option value="">Select a category</option>
+                <option>IT & Software</option>
+                <option>Core Engineering</option>
+                <option>Government & Public Sector</option>
+                <option>Business & Commerce</option>
+                <option>Creative & Media</option>
+                <option>Skilled Trades & Technical</option>
+                <option>Social / NGO & Education</option>
+            </select>
+
+            <p class="dashboard-note" id="category-note"></p>
+
+            <div class="actions" style="margin-top: 16px;">
+                <a href="index.html" class="primary-btn" style="text-decoration:none; text-align:center;">Go to Career Assessment</a>
+            </div>
+        </section>
+
+        <section class="card result-card">
+            <h2>Quick tip</h2>
+            <p class="result-text" id="quick-tip">
+                Select a category from the dropdown to see a short note related to that area.
+            </p>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>Logged-in view for exploring interested domains.</p>
+    </footer>
+</div>
+
+<script>
+    function ensureLoggedIn() {
+        const loggedIn = localStorage.getItem('cpp_logged_in');
+        const stored = localStorage.getItem('cpp_user');
+        if (loggedIn !== 'true' || !stored) {
+            window.location.href = 'login.html';
+            return;
+        }
+        const user = JSON.parse(stored);
+        const chip = document.getElementById('user-chip');
+        chip.textContent = user.name ? user.name : user.email;
+
+        // If the user had an interested area during sign up, pre-select a close match
+        const interestedArea = user.interestedArea || '';
+        const select = document.getElementById('category-select');
+        if (interestedArea) {
+            for (let i = 0; i < select.options.length; i++) {
+                const text = select.options[i].text.toLowerCase();
+                if (interestedArea.toLowerCase().includes('it') && text.startsWith('it & software')) {
+                    select.selectedIndex = i;
+                    updateNote();
+                    break;
+                } else if (interestedArea.toLowerCase().includes('engineer') && text.startsWith('core engineering')) {
+                    select.selectedIndex = i;
+                    updateNote();
+                    break;
+                }
+            }
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('cpp_logged_in');
+        window.location.href = 'login.html';
+    }
+
+    function updateNote() {
+        const select = document.getElementById('category-select');
+        const note = document.getElementById('category-note');
+        const tip = document.getElementById('quick-tip');
+        const value = select.value;
+
+        if (!value) {
+            note.textContent = '';
+            tip.textContent = 'Select a category from the dropdown to see a short note related to that area.';
+            return;
+        }
+
+        note.textContent = 'You selected: ' + value;
+
+        switch (value) {
+            case 'IT & Software':
+                tip.textContent = 'Focus on building basic programming skills and small projects (websites, apps) to experience IT & Software work.';
+                break;
+            case 'Core Engineering':
+                tip.textContent = 'Explore mechanical, electrical or civil fundamentals and participate in technical clubs or mini projects.';
+                break;
+            case 'Government & Public Sector':
+                tip.textContent = 'Start understanding major government exams and keep a habit of reading news and improving aptitude.';
+                break;
+            case 'Business & Commerce':
+                tip.textContent = 'Learn basics of accounting, economics and observe how real businesses operate around you.';
+                break;
+            case 'Creative & Media':
+                tip.textContent = 'Begin a small online portfolio and experiment with tools like Canva or Figma to express your ideas.';
+                break;
+            case 'Skilled Trades & Technical':
+                tip.textContent = 'Look into ITI, polytechnic or apprenticeship opportunities to get hands-on technical exposure.';
+                break;
+            case 'Social / NGO & Education':
+                tip.textContent = 'Volunteer for teaching or social activities to see how you feel about working closely with people.';
+                break;
+            default:
+                tip.textContent = 'Select a category from the dropdown to see a short note related to that area.';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        ensureLoggedIn();
+        document.getElementById('category-select').addEventListener('change', updateNote);
+    });
+</script>
+</body>
+</html>
+
